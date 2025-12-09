@@ -246,29 +246,29 @@ class Wall(pg.sprite.Sprite): # 追加機能５
     防御壁に関するクラス
     こうかとんの前に防御壁を出現させ，着弾を防ぐ
     """
-    def __init__(self, bird: Bird, life: int):
+    def __init__(self, bird: Bird, life: int): # 追加機能５
         """
         防御壁Surfaceを生成する
-        引数 bird：防御壁を出現させるこうかとん
+        引数1 bird：防御壁を出現させるこうかとん
+        引数2 life：防御壁の持続時間（フレーム数）
         """
-        super().__init__() # スーパークラスの初期化
+        super().__init__() # 追加機能５
+        self.life = life  # 防御壁の持続時間を設定 追加機能５
         w = 20  # 防御壁の幅
-        h = bird.rect.height*2  # 防御壁の高さ
-        self.image = pg.Surface((w, h), pg.SRCALPHA) # 防御壁の大きさ
-        self.image.fill((0, 255, 255))  # 防御壁の色
-        self.life = 40  # 防御壁の持続時間（フレーム数）
-        pg.draw.rect(self.image, (0, 255, 255), self.image.get_rect()) # 防御壁の矩形を描画
+        h = bird.rect.height*2 # 防御壁の高さ
+        self.image = pg.Surface((w, h), pg.SRCALPHA) # 防御壁Surfaceを生成
+        self.image.fill((0, 255, 255)) # 防御壁の色を設定
+        pg.draw.rect(self.image, (0, 255, 255), self.image.get_rect()) # 防御壁を描画
         vx , vy = bird.dire  # こうかとんの向きベクトルを取得
-        angle = math.degrees(math.atan2(-vy, vx))  # 向きベクトルから角度を計算
-        self.image = pg.transform.rotozoom(self.image, angle, 1.0)  # 防御壁を回転
+        angle = math.degrees(math.atan2(-vy, vx)) # こうかとんの向きベクトルから角度を計算
+        self.image = pg.transform.rotozoom(self.image, angle, 1.0) # 防御壁を回転
         self.rect = self.image.get_rect() # 防御壁のRectを取得
 
-        between = bird.rect.width # こうかとんと防御壁の間隔
+        between = bird.rect.width # こうかとんと防御壁の間隔を設定
         self.rect.centerx = bird.rect.centerx + between * vx # 防御壁のx座標を設定
         self.rect.centery = bird.rect.centery + between * vy # 防御壁のy座標を設定
 
-    def update(self):
-        #400フレームで防御壁を消す
+    def update(self): #追加機能５
         self.life -= 1 # 防御壁の持続時間を1減算
         if self.life <= 0: # 持続時間が0以下になったら
             self.kill() # 防御壁を消す
@@ -286,7 +286,7 @@ def main():
     beams = pg.sprite.Group()
     exps = pg.sprite.Group()
     emys = pg.sprite.Group()
-    walls = pg.sprite.Group()  # 防御壁グループを作成
+    walls = pg.sprite.Group()  # 防御壁グループを作成 追加機能５
 
     tmr = 0
     clock = pg.time.Clock()
@@ -323,13 +323,14 @@ def main():
             time.sleep(2)
             return
 
-        if key_lst[pg.K_s]:  # 「s」キー押下で防御壁発動
-            walls.add(Wall(bird, 40))  # 防御壁を生成
+        if key_lst[pg.K_s] and score.value > 50 and len(walls) == 0:  #スコアが50点以上で防御壁が存在しない場合sキーで起動 追加機能５
+            walls.add(Wall(bird, 400))  # 防御壁を出現させる 追加機能５
+            score.value -= 50  # スコアを50点減算 追加機能５
 
-        for wall in walls:  # 防御壁と衝突した爆弾リスト
-            hit_bombs = pg.sprite.spritecollide(wall, bombs, True) # 防御壁と衝突した爆弾を取得
-            for bomb in hit_bombs: # 衝突した爆弾ごとに処理
-                exps.add(Explosion(bomb, 50))  # 爆発エフェクト
+        for wall in walls:  # 防御壁ごとに処理 追加機能５
+            hit_bombs = pg.sprite.spritecollide(wall, bombs, True) # 防御壁と衝突した爆弾リスト 追加機能５
+            for bomb in hit_bombs: # 防御壁と衝突した爆弾ごとに処理 追加機能５
+                exps.add(Explosion(bomb, 50)) # 爆発エフェクト 追加機能５
     
         bird.update(key_lst, screen)
         beams.update()
