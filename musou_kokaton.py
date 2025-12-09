@@ -254,14 +254,18 @@ class Wall(pg.sprite.Sprite): # 追加機能５
         super().__init__() # スーパークラスの初期化
         w = 20  # 防御壁の幅
         h = bird.rect.height*2  # 防御壁の高さ
-        self.image = pg.Surface((w, h)) # 防御壁の大きさ
+        self.image = pg.Surface((w, h), pg.SRCALPHA) # 防御壁の大きさ
         self.image.fill((0, 255, 255))  # 防御壁の色
-        self.rect = self.image.get_rect() # 防御壁のRect
         self.life = 40  # 防御壁の持続時間（フレーム数）
+        pg.draw.rect(self.image, (0, 255, 255), self.image.get_rect()) # 防御壁の矩形を描画
+        vx , vy = bird.dire  # こうかとんの向きベクトルを取得
+        angle = math.degrees(math.atan2(-vy, vx))  # 向きベクトルから角度を計算
+        self.image = pg.transform.rotozoom(self.image, angle, 1.0)  # 防御壁を回転
+        self.rect = self.image.get_rect() # 防御壁のRectを取得
 
-        between = 50  # こうかとんから防御壁までの距離
-        self.rect.centerx = bird.rect.centerx + between # 防御壁のx座標を設定
-        self.rect.centery = bird.rect.centery # 防御壁のy座標を設定
+        between = bird.rect.width # こうかとんと防御壁の間隔
+        self.rect.centerx = bird.rect.centerx + between * vx # 防御壁のx座標を設定
+        self.rect.centery = bird.rect.centery + between * vy # 防御壁のy座標を設定
 
     def update(self):
         #400フレームで防御壁を消す
