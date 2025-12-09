@@ -195,6 +195,31 @@ class Explosion(pg.sprite.Sprite):
             self.kill()
 
 
+class Gravity(pg.sprite.Sprite):
+    """
+    重力場に関するクラス
+    """
+    def __init__(self, life: int):
+        """
+        重力場Surfaceを生成する
+        引数 life：発動時間
+        """
+        super().__init__()
+        self.life = life
+        self.image = pg.Surface((WIDTH, HEIGHT))
+        pg.draw.rect(self.image, (0, 0, 0), (0, 0, WIDTH, HEIGHT))
+        self.image.set_alpha(200)
+        self.rect = self.image.get_rect()
+
+    def update(self):
+        """
+        発動時間を1減算し，0未満になったらkillする
+        """
+        self.life -= 1
+        if self.life < 0:
+            self.kill()
+
+
 class Enemy(pg.sprite.Sprite):
     """
     敵機に関するクラス
@@ -253,6 +278,7 @@ def main():
     beams = pg.sprite.Group()
     exps = pg.sprite.Group()
     emys = pg.sprite.Group()
+    gravities = pg.sprite.Group()
 
     tmr = 0
     clock = pg.time.Clock()
@@ -263,6 +289,11 @@ def main():
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
+            if event.type == pg.KEYDOWN and event.key == pg.K_RETURN:
+                if score.value > 200:
+                    gravities.add(Gravity(400))
+                    score.value -= 200
+
         screen.blit(bg_img, [0, 0])
 
         if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
@@ -282,6 +313,14 @@ def main():
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
             score.value += 1  # 1点アップ
 
+        # 重力場と爆弾・敵機の衝突判定
+        for bomb in pg.sprite.groupcollide(bombs, gravities, True, False).keys():
+            exps.add(Explosion(bomb, 50))
+            score.value += 1
+        for emy in pg.sprite.groupcollide(emys, gravities, True, False).keys():
+            exps.add(Explosion(emy, 100))
+            score.value += 10
+
         for bomb in pg.sprite.spritecollide(bird, bombs, True):  # こうかとんと衝突した爆弾リスト
             bird.change_img(8, screen)  # こうかとん悲しみエフェクト
             score.update(screen)
@@ -296,9 +335,16 @@ def main():
         emys.draw(screen)
         bombs.update()
         bombs.draw(screen)
+        
+        # 【修正箇所】Gravityの描画をExplosionやScoreより前に移動しました
+        gravities.update()
+        gravities.draw(screen)
+
         exps.update()
-        exps.draw(screen)
-        score.update(screen)
+        exps.draw(screen)  # これで爆発エフェクトは重力場より手前（明るいまま）になります
+        
+        score.update(screen) # スコアも最前面で描画されます
+        
         pg.display.update()
         tmr += 1
         clock.tick(50)
